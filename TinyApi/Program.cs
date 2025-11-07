@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using TinyApi.Models;
 using TinyApi.Services;
 
@@ -70,6 +71,24 @@ app.MapGet("/items/{id}", (int id, IItemRepository repository) =>
 .WithTags("Items")
 .Produces<Item>(StatusCodes.Status200OK)
 .Produces(StatusCodes.Status404NotFound);
+
+
+app.MapGet("/dbcheck", async (IConfiguration config) =>
+{
+    var connStr = config.GetConnectionString("DefaultConnection");
+
+    try
+    {
+        await using var conn = new SqlConnection(connStr);
+        await conn.OpenAsync();
+        return Results.Ok($"Connected to: {conn.Database}");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Failed to connect: {ex.Message}");
+    }
+});
+
 
 // Create new item
 app.MapPost("/items", (CreateItemRequest request, IItemRepository repository) =>
